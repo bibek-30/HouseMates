@@ -11,9 +11,23 @@ class roomDetails extends Model
 
     protected $fillable = [
         'title',
-        'location',
+        'country',
+        'available',
+        'state',
+        'city',
         'price',
-        'desc',
         'image',
+        'desc',
+
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
 }

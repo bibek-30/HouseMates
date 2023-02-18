@@ -22,10 +22,22 @@ class UserController extends Controller
         return response()->json($users, 200);
     }
 
+    // get singel user
+    public function singleUser($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(["message" => "User not found"], 404);
+        }
+
+        return response()->json($user, 200);
+    }
+
     // Registeration of the user
     public function create(Request $request)
     {
-        // return;
+        // return $request;
         $request->validate([
             'name' => 'required',
             'gender' => 'in:male,female,others',
@@ -35,7 +47,6 @@ class UserController extends Controller
             'confirm_password' => 'required_with:password|same:password',
         ]);
 
-
         $user = User::create([
             'name' => $request->name,
             'gender' => $request->gender,
@@ -44,13 +55,13 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken($request->email)->plainTextToken;
+        // $token = $user->createToken($request->email)->plainTextToken;
 
         $response = [
             "status"  => 200,
             "message" => "User Account Created Successfully",
             "user" => $user,
-            "token" => $token
+            // "token" => $token
         ];
         try {
 
@@ -79,12 +90,67 @@ class UserController extends Controller
         }
 
         $token = $user->createToken($request->email)->plainTextToken;
+        // return $token;
 
         $response = [
-            "user"  => $user,
             "status" => 200,
+            "user"  => $user,
+            "token" => $token
+
         ];
 
+
         return response()->json($response, 200);
+    }
+
+    //edit user Details
+    public function update(Request $request)
+    {
+        $request->validate([
+            'name'
+        ]);
+    }
+
+    //delete user
+    public function destroy($id)
+    {
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(["message" => "User not found"], 404);
+        }
+        $user->delete();
+        $successResponse = ["message" => "User deleted successfully"];
+        return response()->json($successResponse, 200);
+    }
+
+    // Change Password
+    public function changePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'old_password' => 'required',
+            'password'     => 'required|min:8|max:20',
+        ]);
+        // regex:/((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,20})/
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation fails',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $request->user();
+        if (Hash::check($request->old_password, $user->password)) {
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+            return response()->json([
+                'message' => 'Password is successfully updated.',
+            ], 201);
+        } else {
+            return response()->json([
+                'message' => 'Old password does not matched!',
+            ], 400);
+        }
     }
 }

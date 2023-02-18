@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RoomDetailsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -22,10 +23,38 @@ use Illuminate\Support\Facades\Route;
 Route::controller(UserController::class)->group(function () {
     Route::post('/register', 'create');
     Route::post('/login', 'login')->name('login');
+
+
+    Route::group(['middleware' => 'auth:sanctum'], function () {
+        Route::get('/user/{id}', 'singleUser');
+        Route::get('admin/allUser', 'index');
+        Route::post('/changePassword', 'changePassword');
+        Route::delete('admin/delete/{id}', 'destroy');
+    });
 });
 
 
 Route::controller(RoomDetailsController::class)->group(function () {
-    Route::post('/add-room', 'create');
     Route::get('/get-room', 'index');
+    Route::post('/add-room', 'create');
+
+
+
+    Route::group(['middleware' => 'auth:sanctum'], function () {
+        Route::put('/room/{id}', 'update');
+        Route::get('/getroom/{id}', 'show');
+        Route::post('/store', 'store');
+    });
+});
+
+Route::controller(BookingController::class)->group(function () {
+    Route::get('/allbooking', 'index');
+
+    Route::group(['middleware' => 'auth:sanctum'], function () {
+        Route::post('/booking', 'create');
+        Route::get('/user-book', 'show');
+        //not working
+        Route::put('/edit-book/{id}', 'edit');
+        Route::delete('/delete/{id}', 'destroy');
+    });
 });

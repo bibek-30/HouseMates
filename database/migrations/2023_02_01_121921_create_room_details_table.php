@@ -15,13 +15,19 @@ return new class extends Migration
     {
         Schema::create('room_details', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('location');
+            $table->string('title')->unique();
+            // $table->foreignId('user_id')->constrained();
+            $table->string('country');
+            $table->string('state');
+            $table->string('city');
+            $table->boolean('available')->default(true);
             $table->integer('price');
             $table->string('desc');
             $table->string('image');
             $table->timestamps();
         });
+        // $table->boolean('available')->default(true);
+
     }
 
     /**
