@@ -14,6 +14,7 @@ class Booking extends Model
         'start_date',
         'end_date',
         'rent_amount',
+        'booking_amount',
     ];
 
     public function user()

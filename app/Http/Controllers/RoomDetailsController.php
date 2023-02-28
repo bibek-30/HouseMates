@@ -115,6 +115,33 @@ class RoomDetailsController extends Controller
     }
 
 
+    public function search(Request $request)
+    {
+        $query = roomDetails::query();
+
+        if ($request->has('city')) {
+            $query->where('city', 'like', '%' . $request->input('city') . '%');
+        }
+
+        if ($request->has('title')) {
+            $query->where('title', 'LIKE', '%' . $request->input('title') . '%');
+        }
+
+        if ($request->has('min_price') && $request->has('max_price')) {
+            $minPrice = $request->input('min_price');
+            $maxPrice = $request->input('max_price');
+
+            $query->whereBetween('price', [$minPrice, $maxPrice]);
+        }
+
+
+        $rooms = $query->get();
+
+        return response()->json($rooms);
+    }
+
+
+
     public function create(Request $request)
     {
 
@@ -160,6 +187,7 @@ class RoomDetailsController extends Controller
 
         $response = [
             "status"  => 200,
+            "message" => "Room Added Sucessfully",
             "room_details" => $roomDetails
         ];
 

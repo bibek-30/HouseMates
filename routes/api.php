@@ -37,12 +37,12 @@ Route::controller(UserController::class)->group(function () {
 Route::controller(RoomDetailsController::class)->group(function () {
     Route::get('/get-room', 'index');
     Route::post('/add-room', 'create');
-
+    Route::get('/search', 'search');
+    Route::get('/getroom/{id}', 'show');
 
 
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::put('/room/{id}', 'update');
-        Route::get('/getroom/{id}', 'show');
         Route::post('/store', 'store');
     });
 });
@@ -51,7 +51,7 @@ Route::controller(BookingController::class)->group(function () {
     Route::get('/allbooking', 'index');
 
     Route::group(['middleware' => 'auth:sanctum'], function () {
-        Route::post('/booking', 'create');
+        Route::post('/booking/{id}', 'create');
         Route::get('/user-book', 'show');
         //not working
         Route::put('/edit-book/{id}', 'edit');

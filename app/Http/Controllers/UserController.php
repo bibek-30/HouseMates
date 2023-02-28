@@ -61,17 +61,16 @@ class UserController extends Controller
             "status"  => 200,
             "message" => "User Account Created Successfully",
             "user" => $user,
-            // "token" => $token
         ];
-        try {
+        // try {
 
-            // Response if user created successfully
-            return response()->json($response, 200);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            Log::error($e->getTraceAsString());
-            return response()->json(["error" => "An error occurred while processing your request"], 500);
-        }
+        // Response if user created successfully
+        return response()->json($response, 200);
+        // } catch (\Exception $e) {
+        //     Log::error($e->getMessage());
+        //     Log::error($e->getTraceAsString());
+        //     return response()->json(["error" => "An error occurred while processing your request"], 500);
+        // }
     }
 
 
@@ -89,7 +88,8 @@ class UserController extends Controller
             return response()->json(["message" => "Invalid username and password provided"], 404);
         }
 
-        $token = $user->createToken($request->email)->plainTextToken;
+        // $token = $user->createToken($request->email)->plainTextToken;
+        $token = $user->createToken($request->email, [$request->remember_me ? 'remember-me' : ''])->plainTextToken;
         // return $token;
 
         $response = [
