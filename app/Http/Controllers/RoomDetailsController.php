@@ -20,70 +20,22 @@ class RoomDetailsController extends Controller
         return response()->json($details, 200);
     }
 
-    // public function create(Request $request)
-    // {
-    //     // Authenticate the user
-    //     if (!auth()->check()) {
-    //         return response()->json("Unauthorized", 401);
-    //     }
 
-    //     $request->validate([
-    //         'data.title' => 'required',
-    //         'data.country' => 'required',
-    //         'data.state' => 'required',
-    //         'data.city' => 'required',
-    //         'data.price' => 'required|numeric',
-    //         'data.available' => 'required|boolean',
-    //         'image' => 'required|image|max:1024',
-    //         'data.desc' => 'nullable|string'
-    //     ]);
-
-    //     $user = auth()->user();
-    //     $user_id = $user->id;
-
-    //     if ($request->hasFile('image')) {
-    //         $file_room = $request->file('image');
-    //         $filename_room = uniqid() . '.' . $file_room->getClientOriginalExtension();
-    //         $file_room->storeAs('public/images/rooms', $filename_room);
-    //     } else {
-    //         return response()->json("Please add the image");
-    //     }
-
-    //     $data = $request->input('data');
-
-    //     $roomDetails = roomDetails::create([
-    //         'title' => $data['title'],
-    //         'user_id' => $user_id,
-    //         'country' => $data['country'],
-    //         'state' => $data['state'],
-    //         'city' => $data['city'],
-    //         'price' => $data['price'],
-    //         'available' => $data['available'],
-    //         'image' =>  env('APP_URL') . Storage::url('public/images/rooms/' . $filename_room),
-    //         'desc' => $data['desc'] ?? '',
-    //     ]);
-
-    //     $response = [
-    //         "status"  => 200,
-    //         "room_details" => $roomDetails
-    //     ];
-
-    //     return response()->json($response, 200);
-    // }
-
-
-    public function store(Request $request)
+    public function create(Request $request)
     {
         $request->validate([
             'data*.title',
-            'data*.country',
-            'data*.state',
             'data*.city',
+            'data*.state',
+            'data*.zip',
             'data*.price',
             'data*.available',
             'image' => 'required',
             'data*.desc'
         ]);
+
+        $owner = Auth::user();
+        // return $owner;
         if ($request->hasFile('image')) {
             $file_room = $request->file('image');
             $filename_room = uniqid() . '.' . $file_room->extension();
@@ -96,10 +48,10 @@ class RoomDetailsController extends Controller
 
         $roomDetails = roomDetails::create([
             'title' => $data->title,
-            // 'user_id' => 1,
-            'country' => $data->country,
-            'state' => $data->state,
+            'user_id' => $owner->id,
             'city' => $data->city,
+            'state' => $data->state,
+            'zip' => $data->zip,
             'price' => $data->price,
             'available' => $data->available,
             'image' =>  env('APP_URL') . Storage::url('public/images/rooms/' . $filename_room),
@@ -119,11 +71,12 @@ class RoomDetailsController extends Controller
     {
         $query = roomDetails::query();
 
-        if ($request->has('city')) {
-            $query->where('city', 'like', '%' . $request->input('city') . '%');
-        }
+        // if ($request->has('city')) {
+        //     $query->where('city', 'like', '%' . $request->input('city') . '%');
+        // }
 
         if ($request->has('title')) {
+            // return $request;
             $query->where('title', 'LIKE', '%' . $request->input('title') . '%');
         }
 
@@ -140,59 +93,19 @@ class RoomDetailsController extends Controller
         return response()->json($rooms);
     }
 
-
-
-    public function create(Request $request)
+    public function feed(Request $request)
     {
+        $query = roomDetails::query();
 
-        // Check if the user is authenticated
-        // if (!auth()->check()) {
-        //     return response()->json("Unauthorized", 401);
-        // }
-
-        $request->validate([
-            'data*.title',
-            'data*.country',
-            'data*.state',
-            'data*.city',
-            'data*.price',
-            'data*.available',
-            'image' => 'required',
-            'data*.desc'
-        ]);
-
-        // $user_id = auth()->id();
-
-        if ($request->hasFile('image')) {
-            $file_room = $request->file('image');
-            $filename_room = uniqid() . '.' . $file_room->extension();
-            $file_room->storeAs('public/images/rooms', $filename_room);
-        } else {
-            return response()->json("Please add the image");
+        if ($request->has('city')) {
+            $query->where('city', 'like', '%' . $request->input('city') . '%');
         }
 
-        $data = json_decode($request->data);
+        $rooms = $query->get();
 
-        $roomDetails = roomDetails::create([
-            'title' => $data->title,
-            // 'user_id' => 1,
-            'country' => $data->country,
-            'state' => $data->state,
-            'city' => $data->city,
-            'price' => $data->price,
-            'available' => $data->available,
-            'image' =>  env('APP_URL') . Storage::url('public/images/rooms/' . $filename_room),
-            'desc' => $data->desc,
-        ]);
-
-        $response = [
-            "status"  => 200,
-            "message" => "Room Added Sucessfully",
-            "room_details" => $roomDetails
-        ];
-
-        return response()->json($response, 200);
+        return response()->json($rooms);
     }
+
 
 
     public function show($id)
@@ -201,47 +114,95 @@ class RoomDetailsController extends Controller
         return response()->json($singleRoom, 200);
     }
 
+
     public function update(Request $request, $id)
     {
-        // return $request;
+        $user = auth()->user();
+
+        $details = RoomDetails::find($id);
+
+        // Check if the room exists
+        if (!$details) {
+            return response('Room not found.', 404);
+        }
+
+        // Check if the user is the owner of the room
+        if ($user->id !== $details->user_id) {
+            return response('Unauthorized action.', 403);
+        }
+
         $request->validate([
-            'title' => 'unique:room_details',
-            'country',
-            'state',
-            'city',
+            'title',
             'price',
-            'available',
             'desc'
         ]);
 
-        $details = RoomDetails::find($id);
+
         $details->title = $request->title ? $request->title : $details->title;
-        $details->country = $request->country ? $request->country : $details->country;
-        $details->state = $request->state ? $request->state : $details->state;
-        $details->city = $request->city ? $request->city : $details->city;
-        $details->price = $request->price ? $request->price : $details->price;
-        $details->available = $request->available ? $request->available : $details->available;
-        $details->desc = $request->desc ? $request->desc : $details->desc;
-        $details->update();
-
-
-
-        $errResponse = [
-            "status" => false,
-            "message" => "Update error"
-        ];
-
-        if (!$details) {
-            return response()->json($errResponse, 404);
-        }
+        $details->price = $request->input('price', $details->price);
+        $details->desc = $request->input('desc', $details->desc);
+        $details->save();
 
         $successResponse = [
             "status" => true,
-            "message" => "Successfully Updated"
+            "message" => "Successfully updated the room."
         ];
 
-        return response()->json($successResponse, 201);
+        return response()->json($successResponse, 200);
     }
+
+
+
+
+    // public function update(RoomDetails $roomDetails, Request $request, $id)
+    // {
+
+    //     $user = auth()->user();
+
+    //     // Check if the user is the owner of the room
+    //     if ($user->id !== $roomDetails->user_id) {
+    //         return response('Unauthorized action.');
+    //     } else {
+
+    //         $request->validate([
+    //             'title' => 'unique:room_details',
+    //             'country',
+    //             'state',
+    //             'city',
+    //             'price',
+    //             'available',
+    //             'desc'
+    //         ]);
+
+    //         $details = RoomDetails::find($id);
+    //         $details->title = $request->title ? $request->title : $details->title;
+    //         $details->country = $request->country ? $request->country : $details->country;
+    //         $details->state = $request->state ? $request->state : $details->state;
+    //         $details->city = $request->city ? $request->city : $details->city;
+    //         $details->price = $request->price ? $request->price : $details->price;
+    //         $details->available = $request->available ? $request->available : $details->available;
+    //         $details->desc = $request->desc ? $request->desc : $details->desc;
+    //         $details->update();
+
+
+
+    //         $errResponse = [
+    //             "status" => false,
+    //             "message" => "Update error"
+    //         ];
+
+    //         if (!$details) {
+    //             return response()->json($errResponse, 404);
+    //         }
+
+    //         $successResponse = [
+    //             "status" => true,
+    //             "message" => "Successfully Updated"
+    //         ];
+
+    //         return response()->json($successResponse, 201);
+    //     }
+    // }
 
     // Delete post
     public function delete($id)

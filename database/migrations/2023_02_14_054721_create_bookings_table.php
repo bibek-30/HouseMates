@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('room_details_id', 'room_id')->constrained('room_details');
+            $table->string('room_title');
+            $table->string('location');
             $table->date('start_date');
             $table->date('end_date');
             $table->integer('rent_amount');

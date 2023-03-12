@@ -11,10 +11,11 @@ class roomDetails extends Model
 
     protected $fillable = [
         'title',
-        'country',
-        'available',
-        'state',
         'city',
+        'available',
+        'user_id',
+        'state',
+        'zip',
         'price',
         'image',
         'desc',

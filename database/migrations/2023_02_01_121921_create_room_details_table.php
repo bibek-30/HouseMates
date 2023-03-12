@@ -16,10 +16,10 @@ return new class extends Migration
         Schema::create('room_details', function (Blueprint $table) {
             $table->id();
             $table->string('title')->unique();
-            // $table->foreignId('user_id')->constrained();
-            $table->string('country');
+            $table->foreignId('user_id')->constrained();
             $table->string('state');
             $table->string('city');
+            $table->string('zip');
             $table->boolean('available')->default(true);
             $table->integer('price');
             $table->string('desc');

@@ -66,11 +66,6 @@ class UserController extends Controller
 
         // Response if user created successfully
         return response()->json($response, 200);
-        // } catch (\Exception $e) {
-        //     Log::error($e->getMessage());
-        //     Log::error($e->getTraceAsString());
-        //     return response()->json(["error" => "An error occurred while processing your request"], 500);
-        // }
     }
 
 
@@ -95,7 +90,8 @@ class UserController extends Controller
         $response = [
             "status" => 200,
             "user"  => $user,
-            "token" => $token
+            "token" => $token,
+            "message" => "Loged in Sucessfully."
 
         ];
 
@@ -104,12 +100,12 @@ class UserController extends Controller
     }
 
     //edit user Details
-    public function update(Request $request)
-    {
-        $request->validate([
-            'name'
-        ]);
-    }
+    // public function update(Request $request)
+    // {
+    //     $request->validate([
+    //         'name'
+    //     ]);
+    // }
 
     //delete user
     public function destroy($id)

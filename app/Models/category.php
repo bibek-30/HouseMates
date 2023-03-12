@@ -9,7 +9,11 @@ class category extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'category',
-        'parent_id'
+        'categories'
+        // 'parent_id'
+    ];
+
+    protected $casts = [
+        'categories' => 'array',
     ];
 }

@@ -24,12 +24,14 @@ class BookingController extends Controller
             'end_date' => 'required|date|after:start_date',
             'booking_amount' => 'numeric'
         ]);
-        $book_amount = $request->booking_amount;
-        return $book_amount;
+        // return $request;
 
-        $user = auth()->user();
+        $user = Auth::user();
+        // return $user;
+
 
         $room = roomDetails::find($roomId);
+
 
         if (!$room) {
             return response()->json(['error' => 'Room not found'], 404);
@@ -45,8 +47,11 @@ class BookingController extends Controller
             $discountFactor = 0.9; // 10% discount for 3-month booking
         }
 
+        $book_amount = $request->booking_amount;
 
-        $rent_amount = $price * $rent_duration * $discountFactor;
+        $rent_amount = ($price * $rent_duration * $discountFactor) - $book_amount;
+
+
 
         $startDate = Carbon::parse($validatedData['start_date']);
         $endDate = Carbon::parse($validatedData['end_date']);
@@ -67,90 +72,23 @@ class BookingController extends Controller
 
         $booking = new Booking();
         $booking->room_details_id = $room->id;
+        $booking->room_title = $room->title;
+        $booking->location = $room->city . ' ' . $room->state . ' ' . $room->zip;
         $booking->user_id = $user->id;
         $booking->start_date = $startDate;
         $booking->end_date = $endDate;
         $booking->rent_amount = $rent_amount;
+        $booking->booking_amount = $book_amount;
         $booking->save();
 
 
         return response()->json(['message' => 'Room booked successfully'], 200);
     }
 
-
-    // public function create(Request $request)
-    // {
-    //     // Validate the user input
-    //     $validated = $request->validate([
-    //         'room_name' => 'required|string',
-    //         'start_date' => 'required|date',
-    //         'end_date' => 'required|date|after:start_date',
-    //     ]);
-
-    //     // Get the user ID of the currently authenticated user
-    //     $user_id = Auth::id();
-
-    //     // Get the room ID based on the room name
-    //     $room_name = $request->room_name;
-    //     $room = roomDetails::where('title', $room_name)->firstOrFail();
-    //     $room_id = $room->id;
-    //     $price = $room->price;
-
-    //     // return $price;
-
-
-
-    //     // Calculate the total rent amount
-    //     $start_date = Carbon::parse($request->start_date);
-    //     $end_date = Carbon::parse($request->end_date);
-    //     $rent_duration = $end_date->diffInMonths($start_date);
-    //     $discountFactor = 1.0;
-    //     if ($rent_duration >= 3) {
-    //         $discountFactor = 0.9; // 10% discount for 3-month booking
-    //     }
-    //     $rent_amount = $price * $rent_duration * $discountFactor;
-
-
-    //     $existing_bookings = Booking::where('room_details_id', $room_id)
-    //         ->where(function ($query) use ($start_date, $end_date) {
-    //             $query->whereBetween('start_date', [$start_date, $end_date])
-    //                 ->orWhereBetween('end_date', [$start_date, $end_date])
-    //                 ->orWhere(function ($query) use ($start_date, $end_date) {
-    //                     $query->where('start_date', '<=', $start_date)
-    //                         ->where('end_date', '>=', $end_date);
-    //                 });
-    //         })
-    //         ->get();
-    //     if ($existing_bookings->count() > 0) {
-    //         $response = [
-    //             "message" => "This room is already booked for the requested dates.",
-    //             "status" => 400
-    //         ];
-    //         return response()->json($response, 400);
-    //     }
-
-
-    // Create a new booking record
-    //     $booking = new Booking;
-    //     $booking->room_name = $request->room_name;
-    //     $booking->user_id = $user_id;
-    //     $booking->room_details_id = $room_id; // Set the room ID
-    //     $booking->start_date = $request->start_date;
-    //     $booking->end_date = $request->end_date;
-    //     $booking->rent_amount = $rent_amount;
-    //     $booking->save();
-
-    //     $response = [
-    //         "message" => "Booking Placed succesfully",
-    //         "details" => $booking,
-    //         "status" => 200
-    //     ];
-    //     return response()->json($response, 201);
-    // }
-
     public function show(Booking $booking)
     {
         $user_id = Auth::id();
+        // return $user_id;
         $bookings = Booking::getByUserId($user_id);
         if ($bookings->count() === 0) {
             return response()->json("No booking made", 400);

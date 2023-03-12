@@ -14,6 +14,8 @@ class CategoryController extends Controller
      */
     public function index()
     {
+        $category = Category::all();
+        return response()->json($category);
     }
 
     /**
@@ -24,13 +26,15 @@ class CategoryController extends Controller
     public function create(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:categories',
-            'parent_id'
+            'categories' => 'array',
+            'categories.*' => 'string',
+
+            // 'parent_id'
         ]);
 
         $category = Category::create([
-            'name' => $request->name,
-            'parent_id' => $request->parent_id,
+            'categories' => $request->categories,
+            // 'parent_id' => $request->parent_id,
         ]);
 
         return $category;
