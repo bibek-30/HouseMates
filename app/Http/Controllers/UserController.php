@@ -3,13 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -37,12 +32,13 @@ class UserController extends Controller
     // Registeration of the user
     public function create(Request $request)
     {
-        // return $request;
+        // return $request->role;
         $request->validate([
             'name' => 'required',
             'gender' => 'in:male,female,others',
             'mobile_number' => 'required|regex:/9[6-8]{1}[0-9]{8}/',
             'email' => 'required | email|unique:users',
+            'role' => 'in:admin,user',
             'password' => 'required|min:8',
             'confirm_password' => 'required_with:password|same:password',
         ]);
@@ -52,15 +48,19 @@ class UserController extends Controller
             'gender' => $request->gender,
             'mobile_number' => $request->mobile_number,
             'email' => $request->email,
+            'role' => $request->role,
             'password' => Hash::make($request->password),
         ]);
 
-        // $token = $user->createToken($request->email)->plainTextToken;
+
+        $token = $user->createToken($request->email)->plainTextToken;
 
         $response = [
             "status"  => 200,
             "message" => "User Account Created Successfully",
             "user" => $user,
+            // "role" => $user->role,
+            "token" => $token,
         ];
         // try {
 
@@ -83,8 +83,7 @@ class UserController extends Controller
             return response()->json(["message" => "Invalid username and password provided"], 404);
         }
 
-        // $token = $user->createToken($request->email)->plainTextToken;
-        $token = $user->createToken($request->email, [$request->remember_me ? 'remember-me' : ''])->plainTextToken;
+        $token = $user->createToken($request->email)->plainTextToken;
         // return $token;
 
         $response = [

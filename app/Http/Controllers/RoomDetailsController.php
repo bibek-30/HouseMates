@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\roomDetails;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
@@ -23,19 +24,25 @@ class RoomDetailsController extends Controller
 
     public function create(Request $request)
     {
+        // return $request;
         $request->validate([
             'data*.title',
-            'data*.city',
-            'data*.state',
-            'data*.zip',
+            'data*.latitude',
+            'data*.longitude',
+            'data*.address',
             'data*.price',
             'data*.available',
             'image' => 'required',
-            'data*.desc'
+            'data*.desc',
+            'data*.amenities' => 'array',
+            'data*.amenities*.' => 'string',
+            'data*.conditions' => 'nullable|json',
         ]);
 
-        $owner = Auth::user();
-        // return $owner;
+
+        $user = Auth::user();
+        // return $user;
+
         if ($request->hasFile('image')) {
             $file_room = $request->file('image');
             $filename_room = uniqid() . '.' . $file_room->extension();
@@ -48,14 +55,15 @@ class RoomDetailsController extends Controller
 
         $roomDetails = roomDetails::create([
             'title' => $data->title,
-            'user_id' => $owner->id,
-            'city' => $data->city,
-            'state' => $data->state,
-            'zip' => $data->zip,
+            'user_id' => $user->id,
+            'latitude' => $data->latitude,
+            'longitude' => $data->longitude,
+            'address' => $data->address,
             'price' => $data->price,
             'available' => $data->available,
             'image' =>  env('APP_URL') . Storage::url('public/images/rooms/' . $filename_room),
             'desc' => $data->desc,
+            'amenities' => $data->amenities,
         ]);
 
         $response = [
@@ -65,6 +73,48 @@ class RoomDetailsController extends Controller
 
         return response()->json($response, 200);
     }
+
+    public function AddedRoom(roomDetails $roomDetails)
+    {
+        $user_id = Auth::id();
+        // return $user_id;
+        $roomDetails = roomDetails::getByUserId($user_id);
+        if ($roomDetails->count() === 0) {
+            return response()->json("No room added by the user.");
+        }
+        return response()->json($roomDetails);
+    }
+
+    public function ShareRoom(Request $request, $id)
+    {
+        // return $request->conditions;
+        $request->validate([
+            'conditions' => 'array',
+            'conditions*.' => 'required|string',
+        ]);
+        $user = Auth::user();
+        $booking = Booking::find($id);
+
+        if ($user->id !== $booking->user_id) {
+            return response('Unauthorized action.', 401);
+        }
+
+        // return $booking->room_details_id;
+
+        $details = roomDetails::find($booking->room_details_id);
+
+        $details->isShared = true;
+        $details->conditions = $request->conditions;
+        $details->save();
+
+        $SucessMessage = [
+            "details" => $details,
+            "message" => "Room shared sucessfully!"
+        ];
+
+        return response()->json($SucessMessage);
+    }
+
 
 
     public function search(Request $request)
@@ -97,8 +147,8 @@ class RoomDetailsController extends Controller
     {
         $query = roomDetails::query();
 
-        if ($request->has('city')) {
-            $query->where('city', 'like', '%' . $request->input('city') . '%');
+        if ($request->has('address')) {
+            $query->where('address', 'like', '%' . $request->input('address') . '%');
         }
 
         $rooms = $query->get();

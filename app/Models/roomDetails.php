@@ -12,14 +12,23 @@ class roomDetails extends Model
     protected $fillable = [
         'title',
         'city',
-        'available',
         'user_id',
         'state',
         'zip',
         'price',
         'image',
         'desc',
+        'latitude',
+        'longitude',
+        'address',
+        'amenities',
+        'conditions'
 
+
+    ];
+    protected $casts = [
+        'amenities' => 'array',
+        'conditions' => 'array',
     ];
 
     public function user()
@@ -30,5 +39,9 @@ class roomDetails extends Model
     public function bookings()
     {
         return $this->hasMany(Booking::class);
+    }
+    public static function getByUserId($userId)
+    {
+        return roomDetails::where('user_id', $userId)->get();
     }
 }
