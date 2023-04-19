@@ -98,13 +98,12 @@ class UserController extends Controller
         return response()->json($response, 200);
     }
 
-    //edit user Details
-    // public function update(Request $request)
-    // {
-    //     $request->validate([
-    //         'name'
-    //     ]);
-    // }
+
+    public function countUsers()
+    {
+        $userCount = User::count();
+        return $userCount;
+    }
 
     //delete user
     public function destroy($id)

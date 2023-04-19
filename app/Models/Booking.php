@@ -32,4 +32,8 @@ class Booking extends Model
     {
         return Booking::where('user_id', $userId)->get();
     }
+    // public function payment()
+    // {
+    //     return $this->hasOne(Payment::class);
+    // }
 }

@@ -48,7 +48,7 @@ class RoomDetailsController extends Controller
             $filename_room = uniqid() . '.' . $file_room->extension();
             $file_room->storeAs('public/images/rooms', $filename_room);
         } else {
-            return response()->json("Please add the image");
+            return response()->json("Please add the image before submitting.");
         }
 
         $data = json_decode($request->data);
@@ -105,6 +105,7 @@ class RoomDetailsController extends Controller
 
         $details->isShared = true;
         $details->conditions = $request->conditions;
+        $details->available = true;
         $details->save();
 
         $SucessMessage = [
@@ -115,6 +116,45 @@ class RoomDetailsController extends Controller
         return response()->json($SucessMessage);
     }
 
+    public function ShareList()
+    {
+        $sharedRooms = RoomDetails::where('isShared', true)->get();
+
+        return response()->json($sharedRooms);
+    }
+
+    public function mySharedRooms()
+    {
+        $sharedRooms = RoomDetails::where('isShared', true)
+            ->join('users', 'users.id', '=', 'room_details.user_id')
+            ->select('room_details.*', 'users.name', 'users.email')
+            ->get();
+
+        return response()->json($sharedRooms);
+    }
+
+    public function RemoveSharedRoom($roomId)
+    {
+
+        $room = RoomDetails::find($roomId);
+
+        $user_id = Auth::user();
+
+        if ($room->user_id != $user_id) {
+            return "You are not authorized to remove this room";
+        }
+
+        $room->isShared = false;
+        $room->isAvailable = false;
+        $room->save();
+
+        $response = [
+            "message" => "Room share removed succesfully",
+            "status" => 200
+        ];
+
+        return response()->json($response, 200);
+    }
 
 
     public function search(Request $request)
@@ -184,13 +224,23 @@ class RoomDetailsController extends Controller
         $request->validate([
             'title',
             'price',
-            'desc'
+            'desc',
+            'image'
         ]);
+
+        if ($request->hasFile('image')) {
+            $file_room = $request->file('image');
+            $filename_room = uniqid() . '.' . $file_room->extension();
+            $file_room->storeAs('public/images/rooms', $filename_room);
+        }
 
 
         $details->title = $request->title ? $request->title : $details->title;
         $details->price = $request->input('price', $details->price);
         $details->desc = $request->input('desc', $details->desc);
+        $details->image = $request->image ? $request->image : env('APP_URL') . Storage::url('public/images/rooms/' . $filename_room);
+
+
         $details->save();
 
         $successResponse = [
@@ -201,58 +251,14 @@ class RoomDetailsController extends Controller
         return response()->json($successResponse, 200);
     }
 
+    public function RoomCount()
+    {
+        $roomsCounted = roomDetails::count();
+        return $roomsCounted;
+    }
 
 
 
-    // public function update(RoomDetails $roomDetails, Request $request, $id)
-    // {
-
-    //     $user = auth()->user();
-
-    //     // Check if the user is the owner of the room
-    //     if ($user->id !== $roomDetails->user_id) {
-    //         return response('Unauthorized action.');
-    //     } else {
-
-    //         $request->validate([
-    //             'title' => 'unique:room_details',
-    //             'country',
-    //             'state',
-    //             'city',
-    //             'price',
-    //             'available',
-    //             'desc'
-    //         ]);
-
-    //         $details = RoomDetails::find($id);
-    //         $details->title = $request->title ? $request->title : $details->title;
-    //         $details->country = $request->country ? $request->country : $details->country;
-    //         $details->state = $request->state ? $request->state : $details->state;
-    //         $details->city = $request->city ? $request->city : $details->city;
-    //         $details->price = $request->price ? $request->price : $details->price;
-    //         $details->available = $request->available ? $request->available : $details->available;
-    //         $details->desc = $request->desc ? $request->desc : $details->desc;
-    //         $details->update();
-
-
-
-    //         $errResponse = [
-    //             "status" => false,
-    //             "message" => "Update error"
-    //         ];
-
-    //         if (!$details) {
-    //             return response()->json($errResponse, 404);
-    //         }
-
-    //         $successResponse = [
-    //             "status" => true,
-    //             "message" => "Successfully Updated"
-    //         ];
-
-    //         return response()->json($successResponse, 201);
-    //     }
-    // }
 
     // Delete post
     public function delete($id)

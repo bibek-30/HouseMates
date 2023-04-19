@@ -17,73 +17,7 @@ class BookingController extends Controller
         return response()->json($booking, 200);
     }
 
-    // public function create(Request $request, $roomId)
-    // {
-    //     $validatedData = $request->validate([
-    //         'start_date' => 'required|date',
-    //         'end_date' => 'required|date|after:start_date',
-    //         'booking_amount' => 'numeric'
-    //     ]);
-    //     // return $request;
 
-    //     $user = Auth::user();
-    //     // return $user;
-
-
-    //     $room = roomDetails::find($roomId);
-
-
-    //     if (!$room) {
-    //         return response()->json(['error' => 'Room not found'], 404);
-    //     }
-    //     $price = $room->price;
-
-    //     // Calculate the total rent amount
-    //     $start_date = Carbon::parse($request->start_date);
-    //     $end_date = Carbon::parse($request->end_date);
-    //     $rent_duration = $end_date->diffInMonths($start_date);
-    //     $discountFactor = 1.0;
-    //     if ($rent_duration >= 3) {
-    //         $discountFactor = 0.9; // 10% discount for 3-month booking
-    //     }
-
-    //     $book_amount = $request->booking_amount;
-
-    //     $rent_amount = ($price * $rent_duration * $discountFactor) - $book_amount;
-
-
-
-    //     $startDate = Carbon::parse($validatedData['start_date']);
-    //     $endDate = Carbon::parse($validatedData['end_date']);
-    //     $bookings = Booking::where('room_details_id', $room->id)
-    //         ->where(function ($query) use ($startDate, $endDate) {
-    //             $query->whereBetween('start_date', [$startDate, $endDate])
-    //                 ->orWhereBetween('end_date', [$startDate, $endDate])
-    //                 ->orWhere(function ($query) use ($startDate, $endDate) {
-    //                     $query->where('start_date', '<', $startDate)
-    //                         ->where('end_date', '>', $endDate);
-    //                 });
-    //         })
-    //         ->get();
-
-    //     if ($bookings->count() > 0) {
-    //         return response()->json(['error' => 'Room not available during selected dates'], 422);
-    //     }
-
-    //     $booking = new Booking();
-    //     $booking->room_details_id = $room->id;
-    //     $booking->room_title = $room->title;
-    //     $booking->location = $room->city . ' ' . $room->state . ' ' . $room->zip;
-    //     $booking->user_id = $user->id;
-    //     $booking->start_date = $startDate;
-    //     $booking->end_date = $endDate;
-    //     $booking->rent_amount = $rent_amount;
-    //     $booking->booking_amount = $book_amount;
-    //     $booking->save();
-
-
-    //     return response()->json(['message' => 'Room booked successfully'], 200);
-    // }
 
 
     public function create(Request $request, $roomId)
@@ -142,7 +76,7 @@ class BookingController extends Controller
         $booking = new Booking();
         $booking->room_details_id = $room->id;
         $booking->room_title = $room->title;
-        $booking->location = $room->city . ' ' . $room->state . ' ' . $room->zip;
+        $booking->location = $room->address;
         $booking->user_id = $user->id;
         $booking->start_date = $startDate;
         $booking->end_date = $endDate;
@@ -227,28 +161,9 @@ class BookingController extends Controller
         return response()->json($successResponse, 200);
     }
 
-    public function verify(Request $request)
+    public function Count()
     {
-        $args = http_build_query(array(
-            'token' => $request->token,
-            'amount'  => 1000
-        ));
-
-        $url = "https://khalti.com/api/v2/payment/verify/";
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $args);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-        $headers = ['Authorization: key test_secret_key_cd57d7d4d8f742c2999818ea920689d7'];
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $response = curl_exec($ch);
-        $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        return response($response, $status_code);
+        $roomsCounted = Booking::count();
+        return $roomsCounted;
     }
 }

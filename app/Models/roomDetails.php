@@ -26,6 +26,8 @@ class roomDetails extends Model
 
 
     ];
+
+
     protected $casts = [
         'amenities' => 'array',
         'conditions' => 'array',
